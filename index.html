@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PWA Client Visits</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header>
@@ -21,6 +20,8 @@
                 <input type="text" id="newClientCity" placeholder="Città" required>
                 <button type="button" id="addClientButton">Aggiungi Cliente</button>
             </form>
+            <h3>Cerca Clienti</h3>
+            <input type="text" id="searchClientInput" placeholder="Cerca per nome, indirizzo o città">
             <h3>Clienti Disponibili</h3>
             <select id="clientList" multiple></select>
         </section>
