@@ -1,5 +1,3 @@
-// app.js
-
 document.addEventListener('DOMContentLoaded', () => {
     loadClientsFromLocalStorage();
     loadVisitPlansFromLocalStorage();
@@ -93,7 +91,7 @@ function loadClientsFromCSV(event) {
             }
         });
         saveClientsToLocalStorage();
-        populateClientList();
+        populateClientList(clients); // Mostra tutti i clienti inizialmente
     };
     reader.readAsText(file);
 }
@@ -108,7 +106,7 @@ function loadClientsFromLocalStorage() {
     const storedClients = JSON.parse(localStorage.getItem("clients")) || [];
     clients = storedClients;
     nextClientId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 0;
-    populateClientList();
+    populateClientList(clients); // Mostra tutti i clienti inizialmente
 }
 
 // Funzione per aggiungere un nuovo cliente
@@ -126,7 +124,7 @@ function addNewClient() {
 
     clients.push({ id: nextClientId++, name, address, city, region, phone });
     saveClientsToLocalStorage();
-    populateClientList();
+    populateClientList(clients); // Mostra tutti i clienti dopo l'aggiunta
     document.getElementById("newClientForm").reset();
     alert("Cliente aggiunto con successo!");
 }
@@ -139,11 +137,11 @@ function searchClients() {
         client.address.toLowerCase().includes(query) ||
         client.city.toLowerCase().includes(query)
     );
-    populateClientList(filteredClients);
+    populateClientList(filteredClients); // Mostra solo i clienti filtrati
 }
 
 // Funzione per popolamento della lista clienti
-function populateClientList(filteredClients = clients) {
+function populateClientList(filteredClients) {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
 
