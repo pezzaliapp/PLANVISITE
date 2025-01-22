@@ -18,14 +18,12 @@
                 <input type="text" id="newClientName" placeholder="Nome" required>
                 <input type="text" id="newClientAddress" placeholder="Indirizzo" required>
                 <input type="text" id="newClientCity" placeholder="Città" required>
-                <input type="text" id="newClientRegion" placeholder="Regione (opzionale)">
-                <input type="text" id="newClientPhone" placeholder="Telefono (opzionale)">
                 <button type="button" id="addClientButton">Aggiungi Cliente</button>
             </form>
             <h3>Cerca Clienti</h3>
             <input type="text" id="searchClientInput" placeholder="Cerca per nome, indirizzo o città">
             <h3>Clienti Disponibili</h3>
-            <div id="clientListContainer"></div>
+            <select id="clientList" multiple></select>
         </section>
         <section>
             <h2>Pianifica Visita</h2>
