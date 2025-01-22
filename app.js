@@ -8,14 +8,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addClientButton').addEventListener('click', addNewClient);
     document.getElementById('planVisitButton').addEventListener('click', planVisit);
     document.getElementById('exportCSVButton').addEventListener('click', exportVisitPlansToCSV);
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('Service Worker registered successfully.'))
+            .catch(err => console.error('Service Worker registration failed:', err));
+    }
 });
 
-// Variabili globali
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    const installButton = document.createElement('button');
+    installButton.textContent = 'Installa';
+    installButton.style = 'position:fixed;bottom:10px;right:10px;padding:10px;background:#0078d7;color:white;border:none;border-radius:5px;cursor:pointer;';
+    document.body.appendChild(installButton);
+
+    installButton.addEventListener('click', () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('PWA installed successfully!');
+            } else {
+                console.log('PWA installation dismissed.');
+            }
+            deferredPrompt = null;
+            installButton.remove();
+        });
+    });
+});
+
+// Global Variables
 let clients = [];
 let visitPlans = [];
 let nextClientId = 0;
 
-// Carica clienti da CSV
 function loadClientsFromCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -30,7 +59,7 @@ function loadClientsFromCSV(event) {
                     id: nextClientId++,
                     name: fields[0],
                     address: fields[1],
-                    city: fields[2],
+                    city: fields[2]
                 });
             }
         });
@@ -40,12 +69,10 @@ function loadClientsFromCSV(event) {
     reader.readAsText(file);
 }
 
-// Salva i clienti nel localStorage
 function saveClientsToLocalStorage() {
     localStorage.setItem("clients", JSON.stringify(clients));
 }
 
-// Carica i clienti dal localStorage
 function loadClientsFromLocalStorage() {
     const storedClients = JSON.parse(localStorage.getItem("clients")) || [];
     clients = storedClients;
@@ -53,14 +80,13 @@ function loadClientsFromLocalStorage() {
     populateClientList();
 }
 
-// Aggiungi un nuovo cliente
 function addNewClient() {
     const name = document.getElementById("newClientName").value.trim();
     const address = document.getElementById("newClientAddress").value.trim();
     const city = document.getElementById("newClientCity").value.trim();
 
     if (!name || !address || !city) {
-        alert("Inserisci Nome, Indirizzo e Città per il cliente.");
+        alert("Please enter Name, Address, and City for the client.");
         return;
     }
 
@@ -68,10 +94,9 @@ function addNewClient() {
     saveClientsToLocalStorage();
     populateClientList();
     document.getElementById("newClientForm").reset();
-    alert("Cliente aggiunto con successo!");
+    alert("Client added successfully!");
 }
 
-// Popola la lista dei clienti
 function populateClientList() {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
@@ -84,18 +109,17 @@ function populateClientList() {
     });
 }
 
-// Pianifica una visita
 function planVisit() {
     const selectedClientIds = Array.from(document.getElementById("clientList").selectedOptions).map(opt => parseInt(opt.value));
     const visitDate = document.getElementById("visitDate").value;
 
     if (!visitDate) {
-        alert("Inserisci una data per la visita.");
+        alert("Please select a date for the visit.");
         return;
     }
 
     if (selectedClientIds.length === 0) {
-        alert("Seleziona almeno un cliente per pianificare una visita.");
+        alert("Please select at least one client to plan a visit.");
         return;
     }
 
@@ -104,21 +128,18 @@ function planVisit() {
 
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visita pianificata con successo!");
+    alert("Visit planned successfully!");
 }
 
-// Salva i piani di visita nel localStorage
 function saveVisitPlansToLocalStorage() {
     localStorage.setItem("visitPlans", JSON.stringify(visitPlans));
 }
 
-// Carica i piani di visita dal localStorage
 function loadVisitPlansFromLocalStorage() {
     visitPlans = JSON.parse(localStorage.getItem("visitPlans")) || [];
     populateVisitPlanTable();
 }
 
-// Popola la tabella delle visite pianificate
 function populateVisitPlanTable() {
     const tableBody = document.getElementById("visitPlanTableBody");
     tableBody.innerHTML = "";
@@ -129,28 +150,26 @@ function populateVisitPlanTable() {
         row.innerHTML = `
             <td>${plan.date}</td>
             <td>${clientsText}</td>
-            <td><button onclick="deleteVisitPlan(${index})">Elimina</button></td>
+            <td><button onclick="deleteVisitPlan(${index})">Delete</button></td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// Elimina un piano di visita
 function deleteVisitPlan(index) {
     visitPlans.splice(index, 1);
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visita eliminata con successo.");
+    alert("Visit deleted successfully.");
 }
 
-// Esporta le visite in CSV per Google My Maps
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
-        alert("Nessuna visita pianificata da esportare.");
+        alert("No visits planned to export.");
         return;
     }
 
-    const csvRows = ["Data,Cliente,Indirizzo,Città"];
+    const csvRows = ["Date,Client,Address,City"];
 
     visitPlans.forEach(plan => {
         plan.clients.forEach(client => {
