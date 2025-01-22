@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addClientButton').addEventListener('click', addNewClient);
     document.getElementById('planVisitButton').addEventListener('click', planVisit);
     document.getElementById('exportCSVButton').addEventListener('click', exportVisitPlansToCSV);
+    document.getElementById('searchClientInput').addEventListener('input', filterClients);
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
@@ -35,6 +36,7 @@ function loadClientsFromCSV(event) {
         });
         saveClientsToLocalStorage();
         populateClientList();
+        alert("Clienti caricati dal CSV con successo!");
     };
     reader.readAsText(file);
 }
@@ -56,7 +58,7 @@ function addNewClient() {
     const city = document.getElementById("newClientCity").value.trim();
 
     if (!name || !address || !city) {
-        alert("Please enter Name, Address, and City for the client.");
+        alert("Inserisci Nome, Indirizzo e Città per il cliente.");
         return;
     }
 
@@ -64,13 +66,32 @@ function addNewClient() {
     saveClientsToLocalStorage();
     populateClientList();
     document.getElementById("newClientForm").reset();
-    alert("Client added successfully!");
+    alert("Cliente aggiunto con successo!");
 }
 
 function populateClientList() {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
+
     clients.forEach(client => {
+        const option = document.createElement("option");
+        option.value = client.id;
+        option.textContent = `${client.name} - ${client.city}`;
+        clientList.appendChild(option);
+    });
+}
+
+function filterClients() {
+    const query = document.getElementById("searchClientInput").value.toLowerCase();
+    const filteredClients = clients.filter(client => 
+        client.name.toLowerCase().includes(query) || 
+        client.city.toLowerCase().includes(query)
+    );
+
+    const clientList = document.getElementById("clientList");
+    clientList.innerHTML = "";
+
+    filteredClients.forEach(client => {
         const option = document.createElement("option");
         option.value = client.id;
         option.textContent = `${client.name} - ${client.city}`;
@@ -84,12 +105,12 @@ function planVisit() {
     const visitDate = document.getElementById("visitDate").value;
 
     if (!visitDate) {
-        alert("Please select a date for the visit.");
+        alert("Seleziona una data per la visita.");
         return;
     }
 
     if (selectedClientIds.length === 0) {
-        alert("Please select at least one client to plan a visit.");
+        alert("Seleziona almeno un cliente per pianificare una visita.");
         return;
     }
 
@@ -98,7 +119,7 @@ function planVisit() {
 
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visit planned successfully!");
+    alert("Visita pianificata con successo!");
 }
 
 function saveVisitPlansToLocalStorage() {
@@ -113,13 +134,14 @@ function loadVisitPlansFromLocalStorage() {
 function populateVisitPlanTable() {
     const tableBody = document.getElementById("visitPlanTableBody");
     tableBody.innerHTML = "";
+
     visitPlans.forEach((plan, index) => {
         const row = document.createElement("tr");
         const clientsText = plan.clients.map(client => `${client.name} (${client.city})`).join(", ");
         row.innerHTML = `
             <td>${plan.date}</td>
             <td>${clientsText}</td>
-            <td><button onclick="deleteVisitPlan(${index})">Delete</button></td>
+            <td><button onclick="deleteVisitPlan(${index})">Elimina</button></td>
         `;
         tableBody.appendChild(row);
     });
@@ -133,11 +155,11 @@ function deleteVisitPlan(index) {
 
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
-        alert("No visits planned to export.");
+        alert("Non ci sono visite pianificate da esportare.");
         return;
     }
 
-    const csvRows = ["Date,Client,Address,City"];
+    const csvRows = ["Data,Cliente,Indirizzo,Città"];
     visitPlans.forEach(plan => {
         plan.clients.forEach(client => {
             csvRows.push(`${plan.date},"${client.name}","${client.address}","${client.city}"`);
@@ -148,6 +170,6 @@ function exportVisitPlansToCSV() {
     const blob = new Blob([csvContent], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "visit_plans.csv";
+    link.download = "visite_pianificate.csv";
     link.click();
 }
