@@ -15,61 +15,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Variabile globale per gestire l'evento 'beforeinstallprompt'
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
 
-    const installAppButton = document.getElementById('installAppButton');
-    installAppButton.style.display = 'block';
+    const installButton = document.getElementById('installAppButton');
+    installButton.style.display = 'block';
 
-    installAppButton.addEventListener('click', () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('PWA installata con successo!');
-                } else {
-                    console.log('Installazione della PWA annullata.');
-                }
-                deferredPrompt = null;
-                installAppButton.style.display = 'none';
-            });
-        }
-    });
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('PWA installata con successo!');
-    document.getElementById('installAppButton').style.display = 'none';
-});
-
-// Funzione per forzare la pulizia della vecchia cache
-function clearOldCaches() {
-    caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-            if (cacheName !== 'pwa-client-visits-cache-v2') {
-                caches.delete(cacheName).then(success => {
-                    if (success) {
-                        console.log(`Cache rimossa: ${cacheName}`);
-                    }
-                });
+    installButton.addEventListener('click', () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('PWA installata con successo!');
+            } else {
+                console.log('Installazione annullata.');
             }
+            deferredPrompt = null;
+            installButton.style.display = 'none';
         });
     });
-}
+});
 
-// Pulizia automatica all'avvio
-clearOldCaches();
-
-// Variabili globali
 let clients = [];
 let visitPlans = [];
 let nextClientId = 0;
 
-// Funzione per caricare clienti dal CSV
 function loadClientsFromCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -91,25 +63,22 @@ function loadClientsFromCSV(event) {
             }
         });
         saveClientsToLocalStorage();
-        populateClientList(clients); // Mostra tutti i clienti inizialmente
+        populateClientList(clients);
     };
     reader.readAsText(file);
 }
 
-// Funzione per salvare clienti nel localStorage
 function saveClientsToLocalStorage() {
     localStorage.setItem("clients", JSON.stringify(clients));
 }
 
-// Funzione per caricare clienti dal localStorage
 function loadClientsFromLocalStorage() {
     const storedClients = JSON.parse(localStorage.getItem("clients")) || [];
     clients = storedClients;
     nextClientId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 0;
-    populateClientList(clients); // Mostra tutti i clienti inizialmente
+    populateClientList(clients);
 }
 
-// Funzione per aggiungere un nuovo cliente
 function addNewClient() {
     const name = document.getElementById("newClientName").value.trim();
     const address = document.getElementById("newClientAddress").value.trim();
@@ -124,12 +93,11 @@ function addNewClient() {
 
     clients.push({ id: nextClientId++, name, address, city, region, phone });
     saveClientsToLocalStorage();
-    populateClientList(clients); // Mostra tutti i clienti dopo l'aggiunta
+    populateClientList(clients);
     document.getElementById("newClientForm").reset();
     alert("Cliente aggiunto con successo!");
 }
 
-// Funzione per cercare clienti
 function searchClients() {
     const query = document.getElementById("searchClientInput").value.toLowerCase();
     const filteredClients = clients.filter(client =>
@@ -137,10 +105,9 @@ function searchClients() {
         client.address.toLowerCase().includes(query) ||
         client.city.toLowerCase().includes(query)
     );
-    populateClientList(filteredClients); // Mostra solo i clienti filtrati
+    populateClientList(filteredClients);
 }
 
-// Funzione per popolamento della lista clienti
 function populateClientList(filteredClients) {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
@@ -152,7 +119,6 @@ function populateClientList(filteredClients) {
     });
 }
 
-// Funzione per pianificare una visita
 function planVisit() {
     const visitDate = document.getElementById("visitDate").value;
 
@@ -167,18 +133,15 @@ function planVisit() {
     alert("Visita pianificata con successo!");
 }
 
-// Funzione per salvare le visite nel localStorage
 function saveVisitPlansToLocalStorage() {
     localStorage.setItem("visitPlans", JSON.stringify(visitPlans));
 }
 
-// Funzione per caricare le visite dal localStorage
 function loadVisitPlansFromLocalStorage() {
     visitPlans = JSON.parse(localStorage.getItem("visitPlans")) || [];
     populateVisitPlanTable();
 }
 
-// Funzione per popolamento della tabella visite pianificate
 function populateVisitPlanTable() {
     const tableBody = document.getElementById("visitPlanTableBody");
     tableBody.innerHTML = "";
@@ -195,7 +158,6 @@ function populateVisitPlanTable() {
     });
 }
 
-// Funzione per eliminare una visita
 function deleteVisitPlan(index) {
     visitPlans.splice(index, 1);
     saveVisitPlansToLocalStorage();
@@ -203,7 +165,6 @@ function deleteVisitPlan(index) {
     alert("Visita eliminata con successo.");
 }
 
-// Funzione per esportare le visite in CSV
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
         alert("Nessuna visita pianificata da esportare.");
