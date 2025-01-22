@@ -1,7 +1,7 @@
 {
     "name": " ClientVisits ",
-    "short_name": "CRM",
-    "description": " PWA Client Visits ",
+    "short_name": "PlanVisite",
+    "description": " PlanVisite ",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#FFFFFF",
