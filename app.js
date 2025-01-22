@@ -1,3 +1,5 @@
+// app.js
+
 document.addEventListener('DOMContentLoaded', () => {
     loadClientsFromLocalStorage();
     loadVisitPlansFromLocalStorage();
@@ -64,20 +66,37 @@ function addNewClient() {
         return;
     }
 
+    const visitDate = prompt("Inserisci la data (YYYY-MM-DD) per pianificare la visita di questo cliente:");
+    if (!visitDate || isNaN(new Date(visitDate).getTime())) {
+        alert("Data non valida. Cliente non aggiunto.");
+        return;
+    }
+
     const newClient = { id: nextClientId++, name, address, city };
     clients.push(newClient);
     saveClientsToLocalStorage();
     populateClientList();
+
+    // Pianifica immediatamente la visita
+    visitPlans.push({ date: visitDate, clients: [newClient] });
+    saveVisitPlansToLocalStorage();
+    populateVisitPlanTable();
+
     document.getElementById("newClientForm").reset();
-    alert("Cliente aggiunto con successo!");
+    alert(`Cliente aggiunto e visita pianificata per il ${visitDate}!`);
 }
 
 // Populate the client list in the selection dropdown
 function populateClientList() {
     const clientList = document.getElementById("clientList");
+    const query = document.getElementById("searchClientInput").value.toLowerCase();
+    const filteredClients = query
+        ? clients.filter(client => client.name.toLowerCase().includes(query) || client.city.toLowerCase().includes(query))
+        : clients;
+
     clientList.innerHTML = "";
 
-    clients.forEach(client => {
+    filteredClients.forEach(client => {
         const option = document.createElement("option");
         option.value = client.id;
         option.textContent = `${client.name} - ${client.city}`;
@@ -87,21 +106,7 @@ function populateClientList() {
 
 // Filter clients for searching
 function filterClients() {
-    const query = document.getElementById("searchClientInput").value.toLowerCase();
-    const filteredClients = clients.filter(client =>
-        client.name.toLowerCase().includes(query) ||
-        client.city.toLowerCase().includes(query)
-    );
-
-    const clientList = document.getElementById("clientList");
-    clientList.innerHTML = "";
-
-    filteredClients.forEach(client => {
-        const option = document.createElement("option");
-        option.value = client.id;
-        option.textContent = `${client.name} - ${client.city}`;
-        clientList.appendChild(option);
-    });
+    populateClientList();
 }
 
 // Plan a visit
