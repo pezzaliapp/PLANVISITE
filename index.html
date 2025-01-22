@@ -1,0 +1,50 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Client Visits</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>PWA Client Visits</h1>
+    </header>
+    <main>
+        <section>
+            <h2>Gestione Clienti</h2>
+            <input type="file" id="csvFileInput" accept=".csv">
+            <form id="newClientForm">
+                <input type="text" id="newClientName" placeholder="Nome" required>
+                <input type="text" id="newClientAddress" placeholder="Indirizzo" required>
+                <input type="text" id="newClientCity" placeholder="Città" required>
+                <button type="button" id="addClientButton">Aggiungi Cliente</button>
+            </form>
+            <h3>Clienti Disponibili</h3>
+            <select id="clientList" multiple></select>
+        </section>
+        <section>
+            <h2>Pianifica Visita</h2>
+            <input type="date" id="visitDate">
+            <button type="button" id="planVisitButton">Pianifica</button>
+            <h3>Visite Pianificate</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Clienti</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="visitPlanTableBody"></tbody>
+            </table>
+            <button type="button" id="exportCSVButton">Esporta in CSV</button>
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 PWA Client Visits</p>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
