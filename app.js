@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addClientButton').addEventListener('click', addNewClient);
     document.getElementById('planVisitButton').addEventListener('click', planVisit);
     document.getElementById('exportCSVButton').addEventListener('click', exportVisitPlansToCSV);
-    document.getElementById('searchClientInput').addEventListener('input', filterClients);
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
@@ -17,8 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    const installButton = document.createElement('button');
+    installButton.textContent = 'Installa';
+    installButton.style = 'position:fixed;bottom:10px;right:10px;padding:10px;background:#0078d7;color:white;border:none;border-radius:5px;cursor:pointer;';
+    document.body.appendChild(installButton);
+
+    installButton.addEventListener('click', () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('PWA installed successfully!');
+            } else {
+                console.log('PWA installation dismissed.');
+            }
+            deferredPrompt = null;
+            installButton.remove();
+        });
+    });
+});
+
+// Global Variables
 let clients = [];
-let filteredClients = [];
 let visitPlans = [];
 let nextClientId = 0;
 
@@ -36,14 +59,11 @@ function loadClientsFromCSV(event) {
                     id: nextClientId++,
                     name: fields[0],
                     address: fields[1],
-                    city: fields[2],
-                    region: fields[3] || '', // Regione opzionale
-                    phone: fields[4] || ''  // Telefono opzionale
+                    city: fields[2]
                 });
             }
         });
         saveClientsToLocalStorage();
-        filteredClients = [...clients];
         populateClientList();
     };
     reader.readAsText(file);
@@ -56,7 +76,6 @@ function saveClientsToLocalStorage() {
 function loadClientsFromLocalStorage() {
     const storedClients = JSON.parse(localStorage.getItem("clients")) || [];
     clients = storedClients;
-    filteredClients = [...clients];
     nextClientId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 0;
     populateClientList();
 }
@@ -65,68 +84,42 @@ function addNewClient() {
     const name = document.getElementById("newClientName").value.trim();
     const address = document.getElementById("newClientAddress").value.trim();
     const city = document.getElementById("newClientCity").value.trim();
-    const region = document.getElementById("newClientRegion").value.trim(); // Regione
-    const phone = document.getElementById("newClientPhone").value.trim(); // Telefono
 
     if (!name || !address || !city) {
-        alert("Per favore, compila almeno Nome, Indirizzo e Città.");
+        alert("Please enter Name, Address, and City for the client.");
         return;
     }
 
-    clients.push({ id: nextClientId++, name, address, city, region, phone });
+    clients.push({ id: nextClientId++, name, address, city });
     saveClientsToLocalStorage();
-    filteredClients = [...clients];
     populateClientList();
     document.getElementById("newClientForm").reset();
-    alert("Cliente aggiunto con successo!");
+    alert("Client added successfully!");
 }
 
 function populateClientList() {
-    const clientListContainer = document.getElementById("clientListContainer");
-    clientListContainer.innerHTML = "";
+    const clientList = document.getElementById("clientList");
+    clientList.innerHTML = "";
 
-    filteredClients.forEach(client => {
-        const clientDiv = document.createElement("div");
-        clientDiv.className = "client-item";
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.value = client.id;
-
-        const label = document.createElement("label");
-        label.textContent = `${client.name} - ${client.city}`;
-        if (client.region) label.textContent += ` (${client.region})`;
-        if (client.phone) label.textContent += ` - Tel: ${client.phone}`;
-
-        clientDiv.appendChild(checkbox);
-        clientDiv.appendChild(label);
-        clientListContainer.appendChild(clientDiv);
+    clients.forEach(client => {
+        const option = document.createElement("option");
+        option.value = client.id;
+        option.textContent = `${client.name} - ${client.city}`;
+        clientList.appendChild(option);
     });
 }
 
-function filterClients() {
-    const query = document.getElementById("searchClientInput").value.toLowerCase();
-    filteredClients = clients.filter(client =>
-        client.name.toLowerCase().includes(query) ||
-        client.city.toLowerCase().includes(query) ||
-        client.address.toLowerCase().includes(query) ||
-        client.region.toLowerCase().includes(query) ||
-        client.phone.toLowerCase().includes(query)
-    );
-    populateClientList();
-}
-
 function planVisit() {
-    const selectedClientIds = Array.from(document.querySelectorAll("#clientListContainer input[type='checkbox']:checked")).map(checkbox => parseInt(checkbox.value));
+    const selectedClientIds = Array.from(document.getElementById("clientList").selectedOptions).map(opt => parseInt(opt.value));
     const visitDate = document.getElementById("visitDate").value;
 
     if (!visitDate) {
-        alert("Per favore, seleziona una data per la visita.");
+        alert("Please select a date for the visit.");
         return;
     }
 
     if (selectedClientIds.length === 0) {
-        alert("Per favore, seleziona almeno un cliente.");
+        alert("Please select at least one client to plan a visit.");
         return;
     }
 
@@ -135,7 +128,7 @@ function planVisit() {
 
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visita pianificata con successo!");
+    alert("Visit planned successfully!");
 }
 
 function saveVisitPlansToLocalStorage() {
@@ -157,7 +150,7 @@ function populateVisitPlanTable() {
         row.innerHTML = `
             <td>${plan.date}</td>
             <td>${clientsText}</td>
-            <td><button onclick="deleteVisitPlan(${index})">Elimina</button></td>
+            <td><button onclick="deleteVisitPlan(${index})">Delete</button></td>
         `;
         tableBody.appendChild(row);
     });
@@ -167,20 +160,20 @@ function deleteVisitPlan(index) {
     visitPlans.splice(index, 1);
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visita eliminata con successo.");
+    alert("Visit deleted successfully.");
 }
 
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
-        alert("Nessuna visita pianificata da esportare.");
+        alert("No visits planned to export.");
         return;
     }
 
-    const csvRows = ["Data,Cliente,Indirizzo,Città,Regione,Telefono"];
+    const csvRows = ["Date,Client,Address,City"];
 
     visitPlans.forEach(plan => {
         plan.clients.forEach(client => {
-            csvRows.push(`${plan.date},"${client.name}","${client.address}","${client.city}","${client.region || ''}","${client.phone || ''}"`);
+            csvRows.push(`${plan.date},"${client.name}","${client.address}","${client.city}"`);
         });
     });
 
