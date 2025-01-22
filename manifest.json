@@ -16,5 +16,7 @@
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0078d7"
+  "theme_color": "#0078d7",
+  "description": "An application to manage and plan client visits.",
+  "scope": "/"
 }
