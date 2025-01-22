@@ -1,5 +1,6 @@
 // service-worker.js
-const CACHE_NAME = 'pwa-client-visits-cache-v1';
+
+const CACHE_NAME = 'pwa-client-visits-cache-v2';
 const urlsToCache = [
     '/',
     '/index.html',
