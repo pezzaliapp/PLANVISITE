@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addClientButton').addEventListener('click', addNewClient);
     document.getElementById('planVisitButton').addEventListener('click', planVisit);
     document.getElementById('exportCSVButton').addEventListener('click', exportVisitPlansToCSV);
+    document.getElementById('searchClientInput').addEventListener('input', filterClients);
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
@@ -42,6 +43,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // Global Variables
 let clients = [];
+let filteredClients = [];
 let visitPlans = [];
 let nextClientId = 0;
 
@@ -64,6 +66,7 @@ function loadClientsFromCSV(event) {
             }
         });
         saveClientsToLocalStorage();
+        filteredClients = [...clients];
         populateClientList();
     };
     reader.readAsText(file);
@@ -76,6 +79,7 @@ function saveClientsToLocalStorage() {
 function loadClientsFromLocalStorage() {
     const storedClients = JSON.parse(localStorage.getItem("clients")) || [];
     clients = storedClients;
+    filteredClients = [...clients];
     nextClientId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 0;
     populateClientList();
 }
@@ -92,6 +96,7 @@ function addNewClient() {
 
     clients.push({ id: nextClientId++, name, address, city });
     saveClientsToLocalStorage();
+    filteredClients = [...clients];
     populateClientList();
     document.getElementById("newClientForm").reset();
     alert("Client added successfully!");
@@ -101,12 +106,22 @@ function populateClientList() {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
 
-    clients.forEach(client => {
+    filteredClients.forEach(client => {
         const option = document.createElement("option");
         option.value = client.id;
         option.textContent = `${client.name} - ${client.city}`;
         clientList.appendChild(option);
     });
+}
+
+function filterClients() {
+    const query = document.getElementById("searchClientInput").value.toLowerCase();
+    filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(query) ||
+        client.city.toLowerCase().includes(query) ||
+        client.address.toLowerCase().includes(query)
+    );
+    populateClientList();
 }
 
 function planVisit() {
