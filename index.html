@@ -11,9 +11,11 @@
         <h1>PWA Client Visits</h1>
     </header>
     <main>
+        <!-- Section for Managing Clients -->
         <section>
             <h2>Gestione Clienti</h2>
             <input type="file" id="csvFileInput" accept=".csv">
+            <input type="text" id="searchClientInput" placeholder="Cerca clienti...">
             <form id="newClientForm">
                 <input type="text" id="newClientName" placeholder="Nome" required>
                 <input type="text" id="newClientAddress" placeholder="Indirizzo" required>
@@ -23,6 +25,8 @@
             <h3>Clienti Disponibili</h3>
             <select id="clientList" multiple></select>
         </section>
+
+        <!-- Section for Planning Visits -->
         <section>
             <h2>Pianifica Visita</h2>
             <input type="date" id="visitDate">
