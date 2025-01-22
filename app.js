@@ -17,31 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-
-    const installButton = document.createElement('button');
-    installButton.textContent = 'Installa';
-    installButton.style = 'position:fixed;bottom:10px;right:10px;padding:10px;background:#0078d7;color:white;border:none;border-radius:5px;cursor:pointer;';
-    document.body.appendChild(installButton);
-
-    installButton.addEventListener('click', () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('PWA installed successfully!');
-            } else {
-                console.log('PWA installation dismissed.');
-            }
-            deferredPrompt = null;
-            installButton.remove();
-        });
-    });
-});
-
-// Global Variables
 let clients = [];
 let filteredClients = [];
 let visitPlans = [];
@@ -61,7 +36,9 @@ function loadClientsFromCSV(event) {
                     id: nextClientId++,
                     name: fields[0],
                     address: fields[1],
-                    city: fields[2]
+                    city: fields[2],
+                    region: fields[3] || '', // Regione opzionale
+                    phone: fields[4] || ''  // Telefono opzionale
                 });
             }
         });
@@ -88,29 +65,42 @@ function addNewClient() {
     const name = document.getElementById("newClientName").value.trim();
     const address = document.getElementById("newClientAddress").value.trim();
     const city = document.getElementById("newClientCity").value.trim();
+    const region = document.getElementById("newClientRegion").value.trim(); // Regione
+    const phone = document.getElementById("newClientPhone").value.trim(); // Telefono
 
     if (!name || !address || !city) {
-        alert("Please enter Name, Address, and City for the client.");
+        alert("Per favore, compila almeno Nome, Indirizzo e Città.");
         return;
     }
 
-    clients.push({ id: nextClientId++, name, address, city });
+    clients.push({ id: nextClientId++, name, address, city, region, phone });
     saveClientsToLocalStorage();
     filteredClients = [...clients];
     populateClientList();
     document.getElementById("newClientForm").reset();
-    alert("Client added successfully!");
+    alert("Cliente aggiunto con successo!");
 }
 
 function populateClientList() {
-    const clientList = document.getElementById("clientList");
-    clientList.innerHTML = "";
+    const clientListContainer = document.getElementById("clientListContainer");
+    clientListContainer.innerHTML = "";
 
     filteredClients.forEach(client => {
-        const option = document.createElement("option");
-        option.value = client.id;
-        option.textContent = `${client.name} - ${client.city}`;
-        clientList.appendChild(option);
+        const clientDiv = document.createElement("div");
+        clientDiv.className = "client-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = client.id;
+
+        const label = document.createElement("label");
+        label.textContent = `${client.name} - ${client.city}`;
+        if (client.region) label.textContent += ` (${client.region})`;
+        if (client.phone) label.textContent += ` - Tel: ${client.phone}`;
+
+        clientDiv.appendChild(checkbox);
+        clientDiv.appendChild(label);
+        clientListContainer.appendChild(clientDiv);
     });
 }
 
@@ -119,22 +109,24 @@ function filterClients() {
     filteredClients = clients.filter(client =>
         client.name.toLowerCase().includes(query) ||
         client.city.toLowerCase().includes(query) ||
-        client.address.toLowerCase().includes(query)
+        client.address.toLowerCase().includes(query) ||
+        client.region.toLowerCase().includes(query) ||
+        client.phone.toLowerCase().includes(query)
     );
     populateClientList();
 }
 
 function planVisit() {
-    const selectedClientIds = Array.from(document.getElementById("clientList").selectedOptions).map(opt => parseInt(opt.value));
+    const selectedClientIds = Array.from(document.querySelectorAll("#clientListContainer input[type='checkbox']:checked")).map(checkbox => parseInt(checkbox.value));
     const visitDate = document.getElementById("visitDate").value;
 
     if (!visitDate) {
-        alert("Please select a date for the visit.");
+        alert("Per favore, seleziona una data per la visita.");
         return;
     }
 
     if (selectedClientIds.length === 0) {
-        alert("Please select at least one client to plan a visit.");
+        alert("Per favore, seleziona almeno un cliente.");
         return;
     }
 
@@ -143,7 +135,7 @@ function planVisit() {
 
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visit planned successfully!");
+    alert("Visita pianificata con successo!");
 }
 
 function saveVisitPlansToLocalStorage() {
@@ -165,7 +157,7 @@ function populateVisitPlanTable() {
         row.innerHTML = `
             <td>${plan.date}</td>
             <td>${clientsText}</td>
-            <td><button onclick="deleteVisitPlan(${index})">Delete</button></td>
+            <td><button onclick="deleteVisitPlan(${index})">Elimina</button></td>
         `;
         tableBody.appendChild(row);
     });
@@ -175,20 +167,20 @@ function deleteVisitPlan(index) {
     visitPlans.splice(index, 1);
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
-    alert("Visit deleted successfully.");
+    alert("Visita eliminata con successo.");
 }
 
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
-        alert("No visits planned to export.");
+        alert("Nessuna visita pianificata da esportare.");
         return;
     }
 
-    const csvRows = ["Date,Client,Address,City"];
+    const csvRows = ["Data,Cliente,Indirizzo,Città,Regione,Telefono"];
 
     visitPlans.forEach(plan => {
         plan.clients.forEach(client => {
-            csvRows.push(`${plan.date},"${client.name}","${client.address}","${client.city}"`);
+            csvRows.push(`${plan.date},"${client.name}","${client.address}","${client.city}","${client.region || ''}","${client.phone || ''}"`);
         });
     });
 
