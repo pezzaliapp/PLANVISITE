@@ -20,7 +20,7 @@ let clients = [];
 let visitPlans = [];
 let nextClientId = 0;
 
-// Functions for managing clients
+// Load clients from CSV
 function loadClientsFromCSV(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -41,6 +41,7 @@ function loadClientsFromCSV(event) {
     reader.readAsText(file);
 }
 
+// Save and load clients to/from localStorage
 function saveClientsToLocalStorage() {
     localStorage.setItem("clients", JSON.stringify(clients));
 }
@@ -52,6 +53,7 @@ function loadClientsFromLocalStorage() {
     populateClientList();
 }
 
+// Add a new client
 function addNewClient() {
     const name = document.getElementById("newClientName").value.trim();
     const address = document.getElementById("newClientAddress").value.trim();
@@ -62,13 +64,15 @@ function addNewClient() {
         return;
     }
 
-    clients.push({ id: nextClientId++, name, address, city });
+    const newClient = { id: nextClientId++, name, address, city };
+    clients.push(newClient);
     saveClientsToLocalStorage();
     populateClientList();
     document.getElementById("newClientForm").reset();
     alert("Cliente aggiunto con successo!");
 }
 
+// Populate the client list in the selection dropdown
 function populateClientList() {
     const clientList = document.getElementById("clientList");
     clientList.innerHTML = "";
@@ -81,10 +85,11 @@ function populateClientList() {
     });
 }
 
+// Filter clients for searching
 function filterClients() {
     const query = document.getElementById("searchClientInput").value.toLowerCase();
-    const filteredClients = clients.filter(client => 
-        client.name.toLowerCase().includes(query) || 
+    const filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(query) ||
         client.city.toLowerCase().includes(query)
     );
 
@@ -99,7 +104,7 @@ function filterClients() {
     });
 }
 
-// Functions for managing visits
+// Plan a visit
 function planVisit() {
     const selectedClientIds = Array.from(document.getElementById("clientList").selectedOptions).map(opt => parseInt(opt.value));
     const visitDate = document.getElementById("visitDate").value;
@@ -122,6 +127,7 @@ function planVisit() {
     alert("Visita pianificata con successo!");
 }
 
+// Save and load visit plans to/from localStorage
 function saveVisitPlansToLocalStorage() {
     localStorage.setItem("visitPlans", JSON.stringify(visitPlans));
 }
@@ -131,6 +137,7 @@ function loadVisitPlansFromLocalStorage() {
     populateVisitPlanTable();
 }
 
+// Populate the visit plan table
 function populateVisitPlanTable() {
     const tableBody = document.getElementById("visitPlanTableBody");
     tableBody.innerHTML = "";
@@ -147,12 +154,14 @@ function populateVisitPlanTable() {
     });
 }
 
+// Delete a visit plan
 function deleteVisitPlan(index) {
     visitPlans.splice(index, 1);
     saveVisitPlansToLocalStorage();
     populateVisitPlanTable();
 }
 
+// Export visit plans to CSV
 function exportVisitPlansToCSV() {
     if (visitPlans.length === 0) {
         alert("Non ci sono visite pianificate da esportare.");
