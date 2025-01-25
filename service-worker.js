@@ -1,12 +1,12 @@
 const CACHE_NAME = "pwa-client-visits-cache-v1";
 const urlsToCache = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json",
-  "./icons/icon-192x192.png",
-  "./icons/icon-512x512.png"
+  "/PLANVISITE/",
+  "/PLANVISITE/index.html",
+  "/PLANVISITE/style.css",
+  "/PLANVISITE/app.js",
+  "/PLANVISITE/manifest.json",
+  "/PLANVISITE/icons/icon-192x192.png",
+  "/PLANVISITE/icons/icon-512x512.png"
 ];
 
 self.addEventListener("install", event => {
